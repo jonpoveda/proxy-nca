@@ -141,7 +141,7 @@ print(
 
 # Compute statistics
 moments = utils.compute_moments(dl_tr.dataset)
-print('Moments found: {}'.format(moments.tolist()))
+logging.info('Moments found: {}'.format(moments.tolist()))
 
 # Set normalization using statistics
 dl_tr.dataset.transform.transforms[-1] = transforms.Normalize(
@@ -150,8 +150,8 @@ dl_tr.dataset.transform.transforms[-1] = transforms.Normalize(
 dl_ev.dataset.transform.transforms[-1] = transforms.Normalize(
     mean=moments[0].tolist(), std=moments[1].tolist(),
 )
-print('Transformations (train) replaced:\n{}'.format(dl_tr.dataset.transform))
-print('Transformations (eval) replaced:\n{}'.format(dl_ev.dataset.transform))
+logging.info('Transformations (train) replaced:\n{}'.format(dl_tr.dataset.transform))
+logging.info('Transformations (eval) replaced:\n{}'.format(dl_ev.dataset.transform))
 
 try:
     filepath = 'stats.json'
