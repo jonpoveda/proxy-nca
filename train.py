@@ -1,4 +1,7 @@
 import logging, imp
+
+from torchvision.transforms import transforms
+
 import dataset
 import utils
 import proxynca
@@ -20,6 +23,7 @@ import time
 import argparse
 import json
 import random
+import utils
 
 seed = 0
 random.seed(seed)
@@ -127,6 +131,41 @@ dl_ev = torch.utils.data.DataLoader(
     num_workers=args.nb_workers,
     pin_memory=True
 )
+
+# Remove normalization
+dl_tr.dataset.transform.transforms[-1] = transforms.Normalize(
+    mean=[0, 0, 0], std=[1, 1, 1]
+)
+print(
+    'Transformations are overwritten as:\n{}'.format(dl_tr.dataset.transform))
+
+# Compute statistics
+moments = utils.compute_moments(dl_tr.dataset)
+print('Moments found: {}'.format(moments.tolist()))
+
+# Set normalization using statistics
+dl_tr.dataset.transform.transforms[-1] = transforms.Normalize(
+    mean=moments[0].tolist(), std=moments[1].tolist(),
+)
+dl_ev.dataset.transform.transforms[-1] = transforms.Normalize(
+    mean=moments[0].tolist(), std=moments[1].tolist(),
+)
+print('Transformations (train) replaced:\n{}'.format(dl_tr.dataset.transform))
+print('Transformations (eval) replaced:\n{}'.format(dl_ev.dataset.transform))
+
+try:
+    filepath = 'stats.json'
+    with open(filepath, 'w') as path:
+        json.dump(
+            {
+                'meanRGB': moments[0].tolist(),
+                'stdRGB': moments[1].tolist(),
+            },
+            path,
+            indent=4,
+        )
+except:
+    pass
 
 model = net.bn_inception(pretrained=True)
 net.embed(model, sz_embedding=args.sz_embedding)
