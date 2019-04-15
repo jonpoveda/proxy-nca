@@ -10,6 +10,8 @@ numpy = "*"
 matplotlib = "*"
 scipy = "*"
 opencv-python = "*"
+torchviz = "*"
+graphviz = "*"
 
 [dev-packages]
 
