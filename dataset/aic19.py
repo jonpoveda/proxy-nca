@@ -3,10 +3,6 @@ import PIL
 from dataset.base import BaseDataset
 import numpy as np
 from pathlib import Path
-import torchvision
-import os
-from torch.utils.data.dataset import Dataset
-import cv2
 
 from dataset.utils import make_transform
 
@@ -53,20 +49,8 @@ class AIC19(BaseDataset):
         self.ys = self.ys[mask]
         print('Labels selected: {}'.format(len(self.ys)))
 
-        # self.ys = self.ys[,:]
-        # MARTI
-        # from dataset import parser
-        # ys = parser.load_detections_txt(gtfile, "LTWH", 1)
-        # print(ys)
-        # frame = ys[1]
-        # print(frame)
-        # print(frame.get_id())
-        # print(frame.get_ROIs())
-        # exit(55)
-
     def get_image(self, frame):
         """ Get the image with name `frame` """
-        # convert gray to rgb
         filename = '{:04d}.png'.format(frame)
         filepath = self.images_paths.joinpath(filename)
 
@@ -76,9 +60,6 @@ class AIC19(BaseDataset):
 
         # OPENCV
         # im = cv2.imread(str(filepath))
-
-        # im = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
-        # if len(list(im.split())) == 1: im = im.convert('RGB')
         return im
 
     def get_label(self, index):
