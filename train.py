@@ -150,8 +150,10 @@ dl_tr.dataset.transform.transforms[-1] = transforms.Normalize(
 dl_ev.dataset.transform.transforms[-1] = transforms.Normalize(
     mean=moments[0].tolist(), std=moments[1].tolist(),
 )
-logging.info('Transformations (train) replaced:\n{}'.format(dl_tr.dataset.transform))
-logging.info('Transformations (eval) replaced:\n{}'.format(dl_ev.dataset.transform))
+logging.info(
+    'Transformations (train) replaced:\n{}'.format(dl_tr.dataset.transform))
+logging.info(
+    'Transformations (eval) replaced:\n{}'.format(dl_ev.dataset.transform))
 
 try:
     filepath = 'stats.json'
@@ -170,6 +172,11 @@ except:
 model = net.bn_inception(pretrained=True)
 net.embed(model, sz_embedding=args.sz_embedding)
 model = model.cuda()
+
+# Load previous model
+path = "model/{}".format('test-aic19-mix-c1.pt')
+model.load_state_dict(torch.load(path, map_location='cpu'))
+model.eval()
 
 criterion = config['criterion']['type'](
     nb_classes=dl_tr.dataset.nb_classes(),
