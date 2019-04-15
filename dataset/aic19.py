@@ -40,8 +40,8 @@ class AIC19(BaseDataset):
             gt = [element.split(sep=',') for line in gt for element in line]
 
         # Convert to numpy array
-        self.ys = np.array(gt, dtype=np.int16)
-        # print(image_names)
+        self.labels = np.array(gt, dtype=np.int16)
+        self.ys = self.labels[:, 1]
 
         # MARTI
         # from dataset import parser
@@ -72,10 +72,10 @@ class AIC19(BaseDataset):
 
     def get_label(self, index):
         """ Gets the car ID """
-        return self.ys[index][1]
+        return self.ys[index]
 
     def __len__(self) -> int:
-        return self.ys.shape[0]
+        return len(self.ys)
 
     def __getitem__(self, index):
         """ Returns an element at position `index`
@@ -83,11 +83,13 @@ class AIC19(BaseDataset):
         Returns:
             image, label, index
         """
-        labels = self.ys[index]
+        labels = self.labels[index]
         frame_num, object_id, left, top, width, height, = labels[0:6]
         bb = (top, left, top + height, left + width)
 
-        im = self.get_image(frame_num)
+        # NOTE (jonatan@adsmurai.com) dev
+        # im = self.get_image(frame_num)
+        im = self.get_image(15)
 
         # PIL
         crop = im.crop([bb[1], bb[0], bb[3], bb[2]])

@@ -4,10 +4,11 @@
     "dataset": {
         "aic19": {
             "classes": {
-                "train": "S01/c001",
-                "eval": "S01/c002"
+                "train": "str('S01/c001')",
+                "eval": "str('S01/c002')"
             },
-            "root": "str('/home/jon/repos/mcv/m6/proxy-nca/data/train/')"
+            "localroot": "str('/home/jon/repos/mcv/m6/proxy-nca/data/train/')",
+            "root": "str('/home/users/jpoveda/scratch-local/aic19/train')"
         }
     },
     "transform_parameters": {
