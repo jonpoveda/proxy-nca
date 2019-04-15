@@ -70,9 +70,9 @@ class AIC19(BaseDataset):
         # convert gray to rgb
         filename = '{:04d}.png'.format(frame)
         filepath = self.images_paths.joinpath(filename)
-        print('Reading image: {}'.format(filepath))
 
         # PIL
+        # print('Reading image: {}'.format(filepath))
         im = PIL.Image.open(filepath)
 
         # OPENCV
@@ -85,6 +85,10 @@ class AIC19(BaseDataset):
     def get_label(self, index):
         """ Gets the car ID """
         return self.ys[index]
+
+    def nb_classes(self):
+        assert len(set(self.ys)) == len(self.classes)
+        return len(self.classes)
 
     def __len__(self) -> int:
         return len(self.ys)
