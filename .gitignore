@@ -10,3 +10,5 @@ _/
 .venv/
 data/
 model/
+log/
+viz/
