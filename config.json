@@ -4,8 +4,8 @@
     "dataset": {
         "aic19": {
             "classes": {
-                "train": "range(0, 50)",
-                "eval": "range(50, 77)"
+                "train": "range(0, 60)",
+                "eval": "range(60, 77)"
             },
             "localroot": "str('/home/jon/repos/mcv/m6/proxy-nca/data/train/')",
             "root": "str('/home/users/jpoveda/scratch-local/aic19/train')"
