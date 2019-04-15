@@ -15,8 +15,8 @@
         "rgb_to_bgr": "False",
         "rgb_to_hsv": "True",
         "intensity_scale": "[[0, 1], [0, 255]]",
-        "mean": "[0, 0, 0]",
-        "std": "[1, 1, 1]"
+        "mean": "[149.2224, 66.9379, 140.6337]",
+        "std": "[55.72, 71.4796, 70.2449]"
     },
     "criterion": {
         "type": "proxynca.ProxyNCA",
