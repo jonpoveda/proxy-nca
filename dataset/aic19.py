@@ -20,17 +20,17 @@ class AIC19(BaseDataset):
         Args:
             root: path to train folder
             classes: path to sequence/camera (e.g. 'S01/c001')
+            classes: range of ints
         """
         BaseDataset.__init__(self, root, classes, transform)
 
-        self.images_paths = Path(root).joinpath(classes, 'images')
+        self.images_paths = Path(root).joinpath('S01', 'c001', 'images')
         imgs = list(self.images_paths.glob('*.png'))
         self.im_path = sorted(imgs, key=lambda path: path.stem)
-        # image_names = [p.stem for p in imgs]
 
         # Load GT
         # Format: [frame, ID, left, top, width, height, 1, -1, -1, -1]
-        gtfile = Path(root).joinpath(classes, 'gt', 'gt.txt')
+        gtfile = Path(root).joinpath('S01', 'c001', 'gt', 'gt.txt')
         print('Reading GT file: {}'.format(gtfile))
         with gtfile.open('r') as file:
             gt = file.readlines()
@@ -41,8 +41,20 @@ class AIC19(BaseDataset):
 
         # Convert to numpy array
         self.labels = np.array(gt, dtype=np.int16)
-        self.ys = self.labels[:, 1]
+        self.ys = np.array(self.labels[:, 1], dtype=np.int16)
 
+        # Filter by selected classes
+        mask = np.zeros(self.ys.shape, dtype=np.bool)
+        sample_classes = list(set(self.ys))
+        print('Classes found: {}'.format(len(sample_classes)))
+        for c in sample_classes[classes.start:classes.stop]:
+            mask |= self.ys == c
+
+        print('Labels found: {}'.format(len(self.ys)))
+        self.ys = self.ys[mask]
+        print('Labels selected: {}'.format(len(self.ys)))
+
+        # self.ys = self.ys[,:]
         # MARTI
         # from dataset import parser
         # ys = parser.load_detections_txt(gtfile, "LTWH", 1)
@@ -133,7 +145,7 @@ class AIC19(BaseDataset):
 if __name__ == '__main__':
     ds = AIC19(
         root='/home/jon/repos/mcv/m6/proxy-nca/data/train/',
-        classes='S01/c001',
+        classes=range(0, 50),
         transform=make_transform(**{
             "rgb_to_bgr": False,
             "rgb_to_hsv": True,
