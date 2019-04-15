@@ -68,7 +68,6 @@ class AIC19(BaseDataset):
         """ Get the image with name `frame` """
         # convert gray to rgb
         filename = '{:04d}.png'.format(frame)
-        print(filename)
         filepath = self.images_paths.joinpath(filename)
 
         # PIL
