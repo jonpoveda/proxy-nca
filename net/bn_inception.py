@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 
@@ -12,8 +14,9 @@ https://github.com/dichotomies/proxy-nca.
 
 def bn_inception(pretrained=False, **kwargs):
     model = BNInception(**kwargs)
+    path = Path(__file__).parent.joinpath('bn_inception_weights_pt04.pt')
     if pretrained:
-        model.load_state_dict(torch.load('net/bn_inception_weights_pt04.pt'))
+        model.load_state_dict(torch.load(path))
     return model
 
 class BNInception(nn.Module):
@@ -534,7 +537,7 @@ class BNInception(nn.Module):
         )
         self.inception_5b_relu_double_3x3_2 = nn.ReLU(inplace)
         self.inception_5b_pool = nn.MaxPool2d(
-            (3, 3), stride=(1, 1), padding=(1, 1), dilation=(1, 1), 
+            (3, 3), stride=(1, 1), padding=(1, 1), dilation=(1, 1),
             ceil_mode=True
         )
         self.inception_5b_pool_proj = nn.Conv2d(
@@ -628,7 +631,7 @@ class BNInception(nn.Module):
                         inception_3a_3x3_bn_out,
                         inception_3a_double_3x3_2_bn_out,
                         inception_3a_pool_proj_bn_out
-                    ], 
+                    ],
                     1
                 )
         inception_3b_1x1_out = self.inception_3b_1x1(inception_3a_output_out)
@@ -701,7 +704,7 @@ class BNInception(nn.Module):
                         inception_3b_3x3_bn_out,
                         inception_3b_double_3x3_2_bn_out,
                         inception_3b_pool_proj_bn_out
-                    ], 
+                    ],
                     1
                 )
         inception_3c_3x3_reduce_out = \
@@ -761,7 +764,7 @@ class BNInception(nn.Module):
                         inception_3c_3x3_bn_out,
                         inception_3c_double_3x3_2_bn_out,
                         inception_3c_pool_out
-                    ], 
+                    ],
                     1
                 )
         inception_4a_1x1_out = self.inception_4a_1x1(inception_3c_output_out)
@@ -837,7 +840,7 @@ class BNInception(nn.Module):
                 inception_4a_3x3_bn_out,
                 inception_4a_double_3x3_2_bn_out,
                 inception_4a_pool_proj_bn_out
-            ], 
+            ],
             1
         )
         inception_4b_1x1_out = self.inception_4b_1x1(
@@ -916,7 +919,7 @@ class BNInception(nn.Module):
                 inception_4b_3x3_bn_out,
                 inception_4b_double_3x3_2_bn_out,
                 inception_4b_pool_proj_bn_out
-            ], 
+            ],
             1
         )
         inception_4c_1x1_out = self.inception_4c_1x1(
@@ -995,7 +998,7 @@ class BNInception(nn.Module):
                 inception_4c_3x3_bn_out,
                 inception_4c_double_3x3_2_bn_out,
                 inception_4c_pool_proj_bn_out
-            ], 
+            ],
             1)
         inception_4d_1x1_out = self.inception_4d_1x1(inception_4c_output_out)
         inception_4d_1x1_bn_out = self.inception_4d_1x1_bn(
@@ -1070,7 +1073,7 @@ class BNInception(nn.Module):
                 inception_4d_3x3_bn_out,
                 inception_4d_double_3x3_2_bn_out,
                 inception_4d_pool_proj_bn_out
-            ], 
+            ],
             1
         )
         inception_4e_3x3_reduce_out = self.inception_4e_3x3_reduce(
@@ -1130,7 +1133,7 @@ class BNInception(nn.Module):
                 inception_4e_3x3_bn_out,
                 inception_4e_double_3x3_2_bn_out,
                 inception_4e_pool_out
-            ], 
+            ],
             1
         )
         inception_5a_1x1_out = self.inception_5a_1x1(inception_4e_output_out)
@@ -1206,7 +1209,7 @@ class BNInception(nn.Module):
                 inception_5a_3x3_bn_out,
                 inception_5a_double_3x3_2_bn_out,
                 inception_5a_pool_proj_bn_out
-            ], 
+            ],
             1
         )
         inception_5b_1x1_out = self.inception_5b_1x1(inception_5a_output_out)
@@ -1284,7 +1287,7 @@ class BNInception(nn.Module):
                 inception_5b_3x3_bn_out,
                 inception_5b_double_3x3_2_bn_out,
                 inception_5b_pool_proj_bn_out
-            ], 
+            ],
             1
         )
         return inception_5b_output_out

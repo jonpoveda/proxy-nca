@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import torch
 from sklearn.utils.extmath import softmax
@@ -38,7 +40,7 @@ def emulate_input_data():
     crops = []
     ys = []
     # for idx in range(len(base_dataset)):
-    for idx in range(6):
+    for idx in range(10):
         im, label, _ = base_dataset[idx]
         crops.append(im)
         ys.append(label)
@@ -46,7 +48,7 @@ def emulate_input_data():
         # Visualise untransformed crops
         # im.show()
 
-    return crops[0:2], crops[2:6]
+    return crops[0:4], crops[4:10]
 
 
 def get_dataloader(samples):
@@ -73,7 +75,7 @@ def get_dataloader(samples):
     return dl
 
 
-def do_it(samples0, samples1, verbose=False):
+def match(samples0, samples1, verbose=False):
     """ Maps elements in `samples0` from `samples1`
 
     Args:
@@ -84,7 +86,9 @@ def do_it(samples0, samples1, verbose=False):
     Returns:
         array of size `samples0` with indices on `samples1`, confidence
     """
-    model = load_model(path="model/{}".format('test-aic19_015.pt'))
+    root_dir = list(os.path.abspath(__file__).rpartition('/')[0:-1])
+    path = ''.join(root_dir + ['model/', 'test-aic19_015.pt'])
+    model = load_model(path)
 
     dl0_test = get_dataloader(samples0)
     dl1_test = get_dataloader(samples1)
@@ -115,4 +119,4 @@ def do_it(samples0, samples1, verbose=False):
 
 if __name__ == '__main__':
     frame0_samples, frame1_samples = emulate_input_data()
-    matches, confidences = do_it(frame0_samples, frame1_samples, verbose=False)
+    matches, confidences = match(frame0_samples, frame1_samples, verbose=False)
