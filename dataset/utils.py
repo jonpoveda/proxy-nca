@@ -5,20 +5,29 @@ import torchvision
 from torchvision import transforms
 import PIL.Image
 import torch
+import cv2
+import numpy as np
 
 
 def std_per_channel(images):
-    images = torch.stack(images, dim = 0)
-    return images.view(3, -1).std(dim = 1)
+    images = torch.stack(images, dim=0)
+    return images.view(3, -1).std(dim=1)
 
 
 def mean_per_channel(images):
-    images = torch.stack(images, dim = 0)
-    return images.view(3, -1).mean(dim = 1)
+    images = torch.stack(images, dim=0)
+    return images.view(3, -1).mean(dim=1)
 
 
-class Identity(): # used for skipping transforms
+class Identity():  # used for skipping transforms
     def __call__(self, im):
+        return im
+
+
+class RGBToHSV():
+    def __call__(self, im: np.ndarray):
+        assert im.mode == 'RGB'
+        im = im.convert('HSV')
         return im
 
 
@@ -43,20 +52,22 @@ class ScaleIntensities():
 
     def __call__(self, tensor):
         tensor = (
-            tensor - self.in_range[0]
-        ) / (
-            self.in_range[1] - self.in_range[0]
-        ) * (
-            self.out_range[1] - self.out_range[0]
-        ) + self.out_range[0]
+                     tensor - self.in_range[0]
+                 ) / (
+                     self.in_range[1] - self.in_range[0]
+                 ) * (
+                     self.out_range[1] - self.out_range[0]
+                 ) + self.out_range[0]
         return tensor
 
 
-def make_transform(sz_resize = 256, sz_crop = 227, mean = [104, 117, 128],
-        std = [1, 1, 1], rgb_to_bgr = True, is_train = True,
-        intensity_scale = None):
+def make_transform(sz_resize=256, sz_crop=227, mean=[104, 117, 128],
+                   std=[1, 1, 1], rgb_to_bgr=True, rgb_to_hsv=True,
+                   is_train=True,
+                   intensity_scale=None):
     return transforms.Compose([
         RGBToBGR() if rgb_to_bgr else Identity(),
+        RGBToHSV() if rgb_to_hsv else Identity(),
         transforms.RandomResizedCrop(sz_crop) if is_train else Identity(),
         transforms.Resize(sz_resize) if not is_train else Identity(),
         transforms.CenterCrop(sz_crop) if not is_train else Identity(),
@@ -69,4 +80,3 @@ def make_transform(sz_resize = 256, sz_crop = 227, mean = [104, 117, 128],
             std=std,
         )
     ])
-

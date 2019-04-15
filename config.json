@@ -4,14 +4,15 @@
     "dataset": {
         "aic19": {
             "classes": {
-                "train": "range(0, 100)",
-                "eval": "range(100, 200)"
+                "train": "S01/c001",
+                "eval": "S01/c002"
             },
-            "root": "str('/home/jon/repos/mcv/m6/proxy-nca/data/train/S01/c001')"
+            "root": "str('/home/jon/repos/mcv/m6/proxy-nca/data/train/')"
         }
     },
     "transform_parameters": {
-        "rgb_to_bgr": "True",
+        "rgb_to_bgr": "False",
+        "rgb_to_hsv": "True",
         "intensity_scale": "[[0, 1], [0, 255]]",
         "mean": "[0, 0, 0]",
         "std": "[1, 1, 1]"
