@@ -68,6 +68,7 @@ class AIC19(BaseDataset):
         """ Get the image with name `frame` """
         # convert gray to rgb
         filename = '{:04d}.png'.format(frame)
+        print(filename)
         filepath = self.images_paths.joinpath(filename)
 
         # PIL
@@ -101,9 +102,6 @@ class AIC19(BaseDataset):
         labels = self.labels[index]
         frame_num, object_id, left, top, width, height, = labels[0:6]
         bb = (top, left, top + height, left + width)
-
-        # NOTE (jonatan@adsmurai.com) dev
-        # im = self.get_image(15)
         im = self.get_image(frame_num)
 
         # PIL
@@ -131,7 +129,7 @@ class AIC19(BaseDataset):
         # DEBUG: Show crop (PIL)
         # crop.show()
 
-        if self.transform is not None:
+        if self.transform:
             crop = self.transform(crop)
 
         # DEBUG: Show transformed crop (PIL)
@@ -146,27 +144,24 @@ class AIC19(BaseDataset):
 
 
 if __name__ == '__main__':
+    transformations = {
+        "rgb_to_bgr": False,
+        "rgb_to_hsv": True,
+        "intensity_scale": [[0, 1], [0, 255]],
+        "mean": [149.2224, 66.9379, 140.6337],
+        "std": [55.72, 71.4796, 70.2449],
+        "is_train": False,
+    }
+
     ds = AIC19(
         root='/home/jon/repos/mcv/m6/proxy-nca/data/train/S01/c001',
         classes=range(0, 50),
-        transform=make_transform(**{
-            "rgb_to_bgr": False,
-            "rgb_to_hsv": True,
-            "intensity_scale": [[0, 1], [0, 255]],
-            "mean": [0, 0, 0],
-            "std": [1, 1, 1],
-        })
+        transform=make_transform(**transformations),
     )
-
-    # ds = AIC19(
-    #     root='/home/jon/repos/mcv/m6/proxy-nca/data/train/',
-    #     classes='S01/c001',
-    #     transform=None,
-    # )
-
-    # ds = AIC19(root='/home/jon/repos/mcv/m6/proxy-nca/data/train/',
-    #            classes='S03/c011', transform=None)
 
     # for i in range(len(ds)):
     for i in range(1):
-        ds[i]
+        im, label, _ = ds[i]
+        sample_arr = np.transpose(im.numpy().astype(np.uint8), (1, 2, 0))
+        sample = PIL.Image.fromarray(sample_arr)
+        sample.show()
