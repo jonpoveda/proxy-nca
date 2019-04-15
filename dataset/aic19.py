@@ -100,8 +100,8 @@ class AIC19(BaseDataset):
         bb = (top, left, top + height, left + width)
 
         # NOTE (jonatan@adsmurai.com) dev
-        # im = self.get_image(frame_num)
-        im = self.get_image(15)
+        # im = self.get_image(15)
+        im = self.get_image(frame_num)
 
         # PIL
         crop = im.crop([bb[1], bb[0], bb[3], bb[2]])
