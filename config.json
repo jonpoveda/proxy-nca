@@ -2,25 +2,18 @@
     "name": "str('example')",
     "gpu_id": "int(0)",
     "dataset": {
-        "cub": {
+        "aic19": {
             "classes": {
                 "train": "range(0, 100)",
                 "eval": "range(100, 200)"
             },
-            "root": "str('/export/home/vtschern/data/cub-200-2011')"
-        },
-        "cars": {
-            "classes": {
-                "train": "range(0, 98)",
-                "eval": "range(98, 196)"
-            },
-            "root": "str('/export/home/vtschern/data/cars196')"
+            "root": "str('/home/jon/repos/mcv/m6/proxy-nca/data/train/S01/c001')"
         }
     },
     "transform_parameters": {
-        "rgb_to_bgr": "True", 
+        "rgb_to_bgr": "True",
         "intensity_scale": "[[0, 1], [0, 255]]",
-        "mean": "[104, 117, 128]",
+        "mean": "[0, 0, 0]",
         "std": "[1, 1, 1]"
     },
     "criterion": {
