@@ -1,19 +1,12 @@
-import PIL
 import numpy as np
 import torch
-from dataset.crops import Crops
 from sklearn.utils.extmath import softmax
+
 import evaluation
-import net
 import dataset
-from utils import evaluate, predict_batchwise
-
-model = net.bn_inception(pretrained=True)
-net.embed(model, sz_embedding=64)
-
-model_path = "model/{}".format('test-aic19_015.pt')
-model.load_state_dict(torch.load(model_path, map_location='cpu'))
-model.eval()
+import net
+from dataset.crops import Crops
+from utils import predict_batchwise
 
 transformations = {
     "rgb_to_bgr": False,
@@ -23,6 +16,14 @@ transformations = {
     "std": [55.72, 71.4796, 70.2449],
     "is_train": False,
 }
+
+
+def load_model(path):
+    model = net.bn_inception(pretrained=True)
+    net.embed(model, sz_embedding=64)
+    model.load_state_dict(torch.load(path, map_location='cpu'))
+    model.eval()
+    return model
 
 
 def emulate_input_data():
@@ -48,62 +49,70 @@ def emulate_input_data():
     return crops[0:2], crops[2:6]
 
 
-frame0_samples, frame1_samples = emulate_input_data()
+def get_dataloader(samples):
+    ds = Crops(
+        imgs=samples,
+        transform=dataset.utils.make_transform(**transformations),
+    )
+    dl = torch.utils.data.DataLoader(
+        ds,
+        batch_size=1,
+        shuffle=False,
+        num_workers=1,
+        pin_memory=True
+    )
 
-ds0_test = Crops(
-    imgs=frame0_samples,
-    transform=dataset.utils.make_transform(**transformations),
-)
+    # DEBUG test dataset
+    # for idx in range(1):
+    #     im, label, _ = ds[idx]
+    #
+    #     # Visualise transformed crops
+    #     sample_arr = np.transpose(im.numpy().astype(np.uint8), (1, 2, 0))
+    #     sample = PIL.Image.fromarray(sample_arr)
+    #     sample.show()
+    return dl
 
-ds1_test = Crops(
-    imgs=frame1_samples,
-    transform=dataset.utils.make_transform(**transformations),
-)
 
-# DEBUG test dataset
-# for idx in range(1):
-#     im, label, _ = ds0_test[idx]
-#
-#     # Visualise transformed crops
-#     sample_arr = np.transpose(im.numpy().astype(np.uint8), (1, 2, 0))
-#     sample = PIL.Image.fromarray(sample_arr)
-#     sample.show()
+def do_it(samples0, samples1, verbose=False):
+    """ Maps elements in `samples0` from `samples1`
 
-dl0_test = torch.utils.data.DataLoader(
-    ds0_test,
-    batch_size=1,
-    shuffle=False,
-    num_workers=1,
-    pin_memory=True
-)
-dl1_test = torch.utils.data.DataLoader(
-    ds1_test,
-    batch_size=1,
-    shuffle=False,
-    num_workers=1,
-    pin_memory=True
-)
+    Args:
+        samples0: list of PIL images
+        samples1: list of PIL images
+        verbose: set True to print some metrics
 
-X0, T0, *_ = predict_batchwise(model, dl0_test)
-Y0 = evaluation.assign_by_euclidian_at_k(X0, T0, 1)
-Y0 = torch.from_numpy(Y0)
+    Returns:
+        array of size `samples0` with indices on `samples1`, confidence
+    """
+    model = load_model(path="model/{}".format('test-aic19_015.pt'))
 
-# Embeddings, Targets, Predictions (k=1 => most probable class)
-print(X0, T0, Y0, Y0.shape)
+    dl0_test = get_dataloader(samples0)
+    dl1_test = get_dataloader(samples1)
 
-X1, T1, *_ = predict_batchwise(model, dl1_test)
-Y1 = evaluation.assign_by_euclidian_at_k(X1, T1, 1)
-Y1 = torch.from_numpy(Y1)
+    # Embeddings, Targets, Predictions (k=1 => most probable class)
+    # print(X0, T0, Y0, Y0.shape)
+    X0, T0, *_ = predict_batchwise(model, dl0_test)
+    Y0 = evaluation.assign_by_euclidian_at_k(X0, T0, 1)
+    Y0 = torch.from_numpy(Y0)
 
-# NOTE implement a function to map two lists of crops for similarity
-distances_between_sets = evaluation.get_distances(X0, X0)
-print('Distance matrix: \n{}'.format(distances_between_sets))
+    X1, T1, *_ = predict_batchwise(model, dl1_test)
+    Y1 = evaluation.assign_by_euclidian_at_k(X1, T1, 1)
+    Y1 = torch.from_numpy(Y1)
 
-prob_matrix = 1.0 - softmax(distances_between_sets)
-print('Prob matrix: \n{}:'.format(prob_matrix))
+    distances_between_sets = evaluation.get_distances(X0, X1)
+    prob_matrix = softmax(-distances_between_sets)
+    matches = np.argmax(prob_matrix, axis=1)
+    confidence = np.max(prob_matrix, axis=1)
 
-most_probable = np.argmax(prob_matrix, axis=1)
-print('Distance to most prob: \n{}'.format(most_probable))
+    if verbose:
+        print('Distance matrix: \n{}'.format(distances_between_sets))
+        print('Prob matrix: \n{}:'.format(prob_matrix))
+        print('Distance to most prob: \n{}'.format(matches))
+        print('Confidence to most prob: \n{}'.format(confidence))
 
-confidence = np.max(prob_matrix, axis=1)
-print('Confidence to most prob: \n{}'.format(confidence))
+    return matches, confidence
+
+
+if __name__ == '__main__':
+    frame0_samples, frame1_samples = emulate_input_data()
+    matches, confidences = do_it(frame0_samples, frame1_samples, verbose=False)
