@@ -18,19 +18,18 @@ class AIC19(BaseDataset):
         """ Dataset using AIC19 data
 
         Args:
-            root: path to train folder
-            classes: path to sequence/camera (e.g. 'S01/c001')
+            root: path to train folder (e.g. ../train/S01/c001)
             classes: range of ints
         """
         BaseDataset.__init__(self, root, classes, transform)
 
-        self.images_paths = Path(root).joinpath('S01', 'c001', 'images')
+        self.images_paths = Path(root).joinpath('images')
         imgs = list(self.images_paths.glob('*.png'))
         self.im_path = sorted(imgs, key=lambda path: path.stem)
 
         # Load GT
         # Format: [frame, ID, left, top, width, height, 1, -1, -1, -1]
-        gtfile = Path(root).joinpath('S01', 'c001', 'gt', 'gt.txt')
+        gtfile = Path(root).joinpath('gt', 'gt.txt')
         print('Reading GT file: {}'.format(gtfile))
         with gtfile.open('r') as file:
             gt = file.readlines()
@@ -148,7 +147,7 @@ class AIC19(BaseDataset):
 
 if __name__ == '__main__':
     ds = AIC19(
-        root='/home/jon/repos/mcv/m6/proxy-nca/data/train/',
+        root='/home/jon/repos/mcv/m6/proxy-nca/data/train/S01/c001',
         classes=range(0, 50),
         transform=make_transform(**{
             "rgb_to_bgr": False,

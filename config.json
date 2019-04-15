@@ -7,8 +7,8 @@
                 "train": "range(0, 60)",
                 "eval": "range(60, 77)"
             },
-            "localroot": "str('/home/jon/repos/mcv/m6/proxy-nca/data/train/')",
-            "root": "str('/home/users/jpoveda/scratch-local/aic19/train')"
+            "localroot": "str('/home/jon/repos/mcv/m6/proxy-nca/data/train/S01/c001')",
+            "root": "str('/home/users/jpoveda/scratch-local/aic19/train/S01/c001')"
         }
     },
     "transform_parameters": {
