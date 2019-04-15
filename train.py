@@ -1,4 +1,3 @@
-
 import logging, imp
 import dataset
 import utils
@@ -6,13 +5,17 @@ import proxynca
 import net
 
 import os
+
 os.putenv("OMP_NUM_THREADS", "8")
 
 import torch
 import numpy as np
 import matplotlib
+
 matplotlib.use('agg', warn=False, force=True)
 import matplotlib.pyplot as plt
+
+from datetime import datetime
 import time
 import argparse
 import json
@@ -22,43 +25,43 @@ seed = 0
 random.seed(seed)
 np.random.seed(seed)
 torch.manual_seed(seed)
-torch.cuda.manual_seed_all(seed) # set random seed for all gpus
+torch.cuda.manual_seed_all(seed)  # set random seed for all gpus
 
-parser = argparse.ArgumentParser(description='Training inception V2' + 
-    ' (BNInception) on CUB200 with Proxy-NCA loss as described in '+ 
-    '`No Fuss Distance Metric Learning using Proxies.`'
-)
+parser = argparse.ArgumentParser(description='Training inception V2' +
+                                             ' (BNInception) on CUB200 with Proxy-NCA loss as described in ' +
+                                             '`No Fuss Distance Metric Learning using Proxies.`'
+                                 )
 # export directory, training and val datasets, test datasets
-parser.add_argument('--dataset', 
-    default='cub',
-    help = 'Path to root CUB folder, containing the images folder.'
-)
-parser.add_argument('--config', 
-    default='config.json',
-    help = 'Path to root CUB folder, containing the images folder.'
-)
-parser.add_argument('--embedding-size', default = 64, type = int,
-    dest = 'sz_embedding',
-    help = 'Size of embedding that is appended to InceptionV2.'
-)
-parser.add_argument('--batch-size', default = 32, type = int,
-    dest = 'sz_batch',
-    help = 'Number of samples per batch.'
-)
-parser.add_argument('--epochs', default = 70, type = int,
-    dest = 'nb_epochs',
-    help = 'Number of training epochs.'
-)
-parser.add_argument('--log-filename', default = 'example',
-    help = 'Name of log file.'
-)
-parser.add_argument('--gpu-id', default = 8, type = int,
-    help = 'ID of GPU that is used for training.'
-)
-parser.add_argument('--workers', default = 16, type = int,
-    dest = 'nb_workers',
-    help = 'Number of workers for dataloader.'
-)
+parser.add_argument('--dataset',
+                    default='cub',
+                    help='Path to root CUB folder, containing the images folder.'
+                    )
+parser.add_argument('--config',
+                    default='config.json',
+                    help='Path to root CUB folder, containing the images folder.'
+                    )
+parser.add_argument('--embedding-size', default=64, type=int,
+                    dest='sz_embedding',
+                    help='Size of embedding that is appended to InceptionV2.'
+                    )
+parser.add_argument('--batch-size', default=32, type=int,
+                    dest='sz_batch',
+                    help='Number of samples per batch.'
+                    )
+parser.add_argument('--epochs', default=70, type=int,
+                    dest='nb_epochs',
+                    help='Number of training epochs.'
+                    )
+parser.add_argument('--log-filename', default='example',
+                    help='Name of log file.'
+                    )
+parser.add_argument('--gpu-id', default=8, type=int,
+                    help='ID of GPU that is used for training.'
+                    )
+parser.add_argument('--workers', default=16, type=int,
+                    dest='nb_workers',
+                    help='Number of workers for dataloader.'
+                    )
 
 args = parser.parse_args()
 torch.cuda.set_device(args.gpu_id)
@@ -66,76 +69,97 @@ torch.cuda.set_device(args.gpu_id)
 config = utils.load_config(args.config)
 from utils import JSONEncoder, json_dumps
 
-print(json_dumps(obj = config, indent=4, cls = JSONEncoder, sort_keys = True))
+print(json_dumps(obj=config, indent=4, cls=JSONEncoder, sort_keys=True))
 with open('log/' + args.log_filename + '.json', 'w') as x:
     json.dump(
-        obj = config, fp = x, indent=4, cls = JSONEncoder, sort_keys = True
+        obj=config, fp=x, indent=4, cls=JSONEncoder, sort_keys=True
     )
+
+
+def save_model(suffix):
+    model_path = 'model/{}_{}.pt'.format(args.log_filename, suffix)
+    torch.save(model.state_dict(), model_path)
+
+
+def try_n_times(fn, ntimes, suffix):
+    if suffix is None:
+        suffix = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    for n in range(ntimes):
+        try:
+            print('Trying: {}'.format(fn))
+            result = fn(suffix)
+            print('Done :)')
+            return result
+        except Exception:
+            pass
+    print("I've tried! but I could not do it :(")
+
 
 dl_tr = torch.utils.data.DataLoader(
     dataset.load(
-        name = args.dataset,
-        root = config['dataset'][args.dataset]['root'],
-        classes = config['dataset'][args.dataset]['classes']['train'],
-        transform = dataset.utils.make_transform(
+        name=args.dataset,
+        root=config['dataset'][args.dataset]['root'],
+        classes=config['dataset'][args.dataset]['classes']['train'],
+        transform=dataset.utils.make_transform(
             **config['transform_parameters']
         )
     ),
-    batch_size = args.sz_batch,
-    shuffle = True,
-    num_workers = args.nb_workers,
-    drop_last = True,
-    pin_memory = True
+    batch_size=args.sz_batch,
+    shuffle=True,
+    num_workers=args.nb_workers,
+    drop_last=True,
+    pin_memory=True
 )
 
 dl_ev = torch.utils.data.DataLoader(
     dataset.load(
-        name = args.dataset,
-        root = config['dataset'][args.dataset]['root'],
-        classes = config['dataset'][args.dataset]['classes']['eval'],
-        transform = dataset.utils.make_transform(
+        name=args.dataset,
+        root=config['dataset'][args.dataset]['root'],
+        classes=config['dataset'][args.dataset]['classes']['eval'],
+        transform=dataset.utils.make_transform(
             **config['transform_parameters'],
-            is_train = False
+            is_train=False
         )
     ),
-    batch_size = args.sz_batch,
-    shuffle = False,
-    num_workers = args.nb_workers,
-    pin_memory = True
+    batch_size=args.sz_batch,
+    shuffle=False,
+    num_workers=args.nb_workers,
+    pin_memory=True
 )
 
-model = net.bn_inception(pretrained = True)
+model = net.bn_inception(pretrained=True)
 net.embed(model, sz_embedding=args.sz_embedding)
 model = model.cuda()
 
 criterion = config['criterion']['type'](
-    nb_classes = dl_tr.dataset.nb_classes(),
-    sz_embed = args.sz_embedding,
+    nb_classes=dl_tr.dataset.nb_classes(),
+    sz_embed=args.sz_embedding,
     **config['criterion']['args']
 ).cuda()
 
 opt = config['opt']['type'](
     [
-        { # inception parameters, excluding embedding layer
+        {  # inception parameters, excluding embedding layer
             **{'params': list(
                 set(
                     model.parameters()
                 ).difference(
                     set(model.embedding_layer.parameters())
                 )
-            )}, 
+            )},
             **config['opt']['args']['backbone']
         },
-        { # embedding parameters
-            **{'params': model.embedding_layer.parameters()}, 
+        {  # embedding parameters
+            **{'params': model.embedding_layer.parameters()},
             **config['opt']['args']['embedding']
         },
-        { # proxy nca parameters
+        {  # proxy nca parameters
             **{'params': criterion.parameters()},
             **config['opt']['args']['proxynca']
         }
     ],
-    **config['opt']['args']['base'] 
+    **config['opt']['args']['base']
 )
 
 scheduler = config['lr_scheduler']['type'](
@@ -176,7 +200,7 @@ for e in range(0, args.nb_epochs):
         m = model(x.cuda())
         loss = criterion(m, y.cuda())
         loss.backward()
-        
+
         torch.nn.utils.clip_grad_value_(model.parameters(), 10)
 
         losses_per_epoch.append(loss.data.cpu().numpy())
@@ -199,5 +223,14 @@ for e in range(0, args.nb_epochs):
     model.losses = losses
     model.current_epoch = e
 
+    # Save model every 5 epochs
+    if e % 5 == 0:
+        save_model(suffix='{:03}'.format(e))
+
 t2 = time.time()
 logging.info("Total training time (minutes): {:.2f}.".format((t2 - t1) / 60))
+
+os.makedirs('model', exist_ok=True)
+logging.info("Saving final model ...")
+try_n_times(fn=save_model, ntimes=5, suffix='final')
+logging.info("Saved")
