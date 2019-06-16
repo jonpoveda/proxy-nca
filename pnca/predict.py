@@ -75,7 +75,7 @@ def get_dataloader(samples):
     return dl
 
 
-def match(samples0, samples1, verbose=False):
+def match(model, samples0, samples1, verbose=False):
     """ Maps elements in `samples0` from `samples1`
 
     Args:
@@ -86,9 +86,9 @@ def match(samples0, samples1, verbose=False):
     Returns:
         array of size `samples0` with indices on `samples1`, confidence
     """
-    root_dir = list(os.path.abspath(__file__).rsplit('/')[0:-2])
-    path = '/'.join(root_dir + ['model', 'test-aic19_015.pt'])
-    model = load_model(path)
+    # root_dir = list(os.path.abspath(__file__).rsplit('/')[0:-2])
+    # path = '/'.join(root_dir + ['model', 'test-aic19_015.pt'])
+    # model = load_model(path)
 
     dl0_test = get_dataloader(samples0)
     dl1_test = get_dataloader(samples1)
@@ -117,6 +117,33 @@ def match(samples0, samples1, verbose=False):
     return matches, confidence
 
 
+def distance(model, sample0, sample1):
+    # root_dir = list(os.path.abspath(__file__).rsplit('/')[0:-2])
+    # path = '/'.join(root_dir + ['model', 'test-aic19_015.pt'])
+    # model = load_model(path)
+    #
+    dl0_test = get_dataloader([sample0])
+    dl1_test = get_dataloader([sample1])
+
+    # Embeddings, Targets, Predictions (k=1 => most probable class)
+    # print(X0, T0, Y0, Y0.shape)
+    X0, T0, *_ = predict_batchwise(model, dl0_test)
+    Y0 = evaluation.assign_by_euclidian_at_k(X0, T0, 1)
+    Y0 = torch.from_numpy(Y0)
+
+    X1, T1, *_ = predict_batchwise(model, dl1_test)
+    Y1 = evaluation.assign_by_euclidian_at_k(X1, T1, 1)
+    Y1 = torch.from_numpy(Y1)
+
+    distance_between_samples = evaluation.get_distances(X0, X1)
+
+    return distance_between_samples[0][0]
+
+
 if __name__ == '__main__':
     frame0_samples, frame1_samples = emulate_input_data()
     matches, confidences = match(frame0_samples, frame1_samples, verbose=False)
+    print(matches, confidences)
+
+    distance = distance(frame0_samples[0], frame1_samples[0])
+    print(distance)
