@@ -8,7 +8,7 @@ import evaluation
 import dataset
 import net
 from dataset.crops import Crops
-from utils import predict_batchwise
+from pnca.utils import predict_batchwise
 
 transformations = {
     "rgb_to_bgr": False,
@@ -86,8 +86,8 @@ def match(samples0, samples1, verbose=False):
     Returns:
         array of size `samples0` with indices on `samples1`, confidence
     """
-    root_dir = list(os.path.abspath(__file__).rpartition('/')[0:-1])
-    path = ''.join(root_dir + ['model/', 'test-aic19_015.pt'])
+    root_dir = list(os.path.abspath(__file__).rsplit('/')[0:-2])
+    path = '/'.join(root_dir + ['model', 'test-aic19_015.pt'])
     model = load_model(path)
 
     dl0_test = get_dataloader(samples0)
